@@ -227,20 +227,21 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
-(( $# < 2 )) && \
+if (( $# < 1 )); then
   _msg_error \
     "no command given" \
-    0 && \
-  _set_overrides && \
+    0
+  _set_overrides
   _usage \
     1
-(( $# < 2 )) && \
+elif (( $# < 2 )); then
   _msg_error \
     "no key given" \
-    0 && \
-  _set_overrides && \
+    0
+  _set_overrides
   _usage \
     1
+fi
 _set \
   "target" \
   "command" \
