@@ -100,8 +100,8 @@ _get_key_value() {
       -c \
       "cat ${_prefs}")"
   _msg_info \
-    "${_line}"
-  _line="$( \
+    "Full configuration file: ${_line}"
+  _value="$( \
     echo \
       "${_line}" | \
       grep \
@@ -111,9 +111,10 @@ _get_key_value() {
           awk \
             -F \
               "=" \
-            '{print $2}')"
-  _value="${_line#\"*}"
-  _value="${_value%*\"}"
+            '{print $2}' | \
+            awk \
+              -F '"' \
+              '{print $1}')"
   echo \
     "${_value}"
 }
