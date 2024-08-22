@@ -119,6 +119,8 @@ _get_key_value() {
 }
 
 _set_overrides() {
+  _msg_info \
+    "setting overrides..."
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
