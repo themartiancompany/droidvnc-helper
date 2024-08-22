@@ -23,20 +23,19 @@ _global_variables() {
 
 _requirements() {
   local \
-    _droidvnc
+    _app
     _check_cmd \
       'app-installed' \
       'android-utils'
-    _droidvnc="$( \
+    _app="$( \
       app-installed \
         'net.christianbeier.droidvnc_ng')"
-    if [[ "${_droidvnc}" != "true" ]]; then
+    if [[ "${_app}" != "true" ]]; then
       _msg_error \
         'DroidVNC not installed.'
     fi
     _check_cmd \
-      "sqlite3" \
-      "sqlite"
+      'awk'
     _check_cmd \
       "su" \
       "tsu"
@@ -71,7 +70,7 @@ _droidvnc_helper() {
     "${_args[@]}"
 }
 
-_set_host_address() {
+_set_key_value() {
   local \
     _key="${1}" \
     _value="${2}"
