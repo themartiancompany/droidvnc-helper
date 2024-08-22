@@ -99,6 +99,8 @@ _get_key_value() {
     su \
       -c \
       "cat ${_prefs}")"
+  _msg_info \
+    "${_line}"
   _line="$( \
     echo \
       "${_line}" | \
