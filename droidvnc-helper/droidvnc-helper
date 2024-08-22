@@ -100,7 +100,10 @@ _get_key_value() {
   _line="$( \
     su \
       -c \
-      "cat ${_prefs}" | \
+      "cat ${_prefs}")"
+  _line="$( \
+    echo \
+      "${_line}" | \
       grep \
         "${_key}" | \
         awk \
