@@ -112,7 +112,7 @@ _get_value() {
         '{print $2}' | \
         awk \
           -F \
-            ">" \
+            "<" \
           '{print $1}'
 }
 
