@@ -114,7 +114,7 @@ _get_key_value() {
             '{print $2}' | \
             awk \
               -F '"' \
-              '{print $1}')"
+              '{print $2}')"
   echo \
     "${_value}"
 }
