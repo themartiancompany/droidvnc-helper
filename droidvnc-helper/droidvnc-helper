@@ -24,7 +24,6 @@ _global_variables() {
 _requirements() {
   local \
     _droidvnc
-  if [[ "${TERMUX_VERSION}" != "" ]]; then
     _check_cmd \
       'app-installed' \
       'android-utils'
@@ -41,7 +40,6 @@ _requirements() {
     _check_cmd \
       "su" \
       "tsu"
-  fi
 }
 
 _droidvnc_helper() {
