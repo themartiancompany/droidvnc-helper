@@ -85,6 +85,37 @@ _set_host_address() {
   #   "false"
 }
 
+_get_attribute() {
+  echo \
+    "${_line}" | \
+    grep \
+      "${_key}" | \
+      awk \
+        '{print $3}' | \
+        awk \
+          -F \
+            "=" \
+          '{print $2}' | \
+          awk \
+            -F '"' \
+            '{print $2}'
+}
+
+_get_value() {
+  echo \
+    "${_line}" | \
+    grep \
+      "${_key}" | \
+      awk \
+        -F \
+          ">" \
+        '{print $2}' | \
+        awk \
+          -F \
+            ">" \
+          '{print $1}'
+}
+
 # Get DroidVNC settings key
 # $1: target settings key
 _get_key_value() {
@@ -102,19 +133,10 @@ _get_key_value() {
   _msg_info \
     "Full configuration file: ${_line}"
   _value="$( \
-    echo \
-      "${_line}" | \
-      grep \
-        "${_key}" | \
-        awk \
-          '{print $3}' | \
-          awk \
-            -F \
-              "=" \
-            '{print $2}' | \
-            awk \
-              -F '"' \
-              '{print $2}')"
+    _get_attribute)"
+  if [[ "${_value}" == "" ]]; then
+    _value="$(_get_value)"
+  fi
   echo \
     "${_value}"
 }
