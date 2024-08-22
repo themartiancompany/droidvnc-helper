@@ -49,7 +49,7 @@ _droidvnc_helper() {
     _command="${1}" \
     _args=() \
     _app
-  _app="net.christianbeier.droidvnc"
+  _app="net.christianbeier.droidvnc_ng"
   if [[ "${_command}" == "get" ]]; then
     _args=(
       "$( \
@@ -96,14 +96,23 @@ _get_key_value() {
     _msg=() \
     _prefs \
     _line
-  _prefs="/data/data/${_app}/${_app}_preferences.xml"
+  _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
   _line="$( \
-    cat \
-      "${_prefs}" | \
+    sudo \
+      cat \
+        "${_prefs}" | \
       grep \
-        "\"${_key}\"")"
+        "${_key}" | \
+        awk \
+          '{print $3}' | \
+          awk \
+            -F \
+              "=" \
+            '{print $2}')"
+  _value="${_line#\"*}"
+  _value="${_value%*\"}"
   echo \
-    "${_line}"
+    "${_value}"
 }
 
 _set_overrides() {
