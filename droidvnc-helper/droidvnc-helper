@@ -89,7 +89,7 @@ _get_attribute() {
   echo \
     "${_line}" | \
     grep \
-      "${_key}" | \
+      '"'"${_key}"'"' | \
       awk \
         '{print $3}' | \
         awk \
