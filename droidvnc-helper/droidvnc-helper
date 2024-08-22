@@ -39,7 +39,7 @@ _requirements() {
       "sqlite3" \
       "sqlite"
     _check_cmd \
-      "sudo" \
+      "su" \
       "tsu"
   fi
 }
@@ -98,7 +98,8 @@ _get_key_value() {
     _line
   _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
   _line="$( \
-    sudo \
+    su \
+      -c \
       cat \
         "${_prefs}" | \
       grep \
