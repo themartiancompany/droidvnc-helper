@@ -50,14 +50,15 @@ _droidvnc_helper() {
   _app="net.christianbeier.droidvnc_ng"
   _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
   if [[ "${_command}" == "get" ]]; then
-    _args=(
+    _obj="key_value"
+    _args+=(
       "$( \
         _get \
           "target" \
           "key")"
       )
   elif [[ "${_command}" == "set" ]]; then
-    _args=(
+    _args+=(
       "$( \
         _get \
           "target" \
@@ -67,17 +68,27 @@ _droidvnc_helper() {
           "target" \
           "value")"
     )
+  elif [[ "${_command}" == "dump" ]]; then
+    _obj="prefs"
   fi
-  "_${_command}_key_value" \
+  "_${_obj}_${_command}" \
     "${_args[@]}"
 }
 
-_dump_prefs() {
+_prefs_dump() {
+  local \
+    _cmd=()
   _msg_info \
     "full configuration file: ${_line}"
+  _cmd=(
+    cat
+      "${_prefs}")
+  su \
+    -c \
+    "${_cmd[*]}"
 }
 
-_set_key_value() {
+_key_value_set() {
   local \
     _key="${1}" \
     _value="${2}" \
@@ -88,11 +99,9 @@ _set_key_value() {
       -c \
       "cat ${_prefs}")"
   _msg_info \
-    "full configuration file: ${_line}"
-  _msg_info \
     "Setting value ${_value} for key ${_key}"
   _pattern="$( \
-    _get_key_value \
+    _key_value_get \
       "${_key}")"
   _expr="s/${_pattern}/${_value}/g"
   _msg_info \
@@ -147,7 +156,7 @@ _get_value() {
 
 # Get DroidVNC settings key
 # $1: target settings key
-_get_key_value() {
+_key_value_get() {
   local \
     _key="${1}" \
     _value \
@@ -202,6 +211,7 @@ usage:
   commands:
      get                  Get configuration value
      set                  Set configuration value
+     dump                 Display configuration file
   options:
      -h                   This message.
      -c                   Enable color output
