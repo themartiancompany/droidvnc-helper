@@ -316,9 +316,10 @@ _key_value_default() {
       su \
         -c \
         sed \
-          "${_delete_expr}" \
+          "'${_delete_expr}'" \
           -i \
-            "${_prefs}"
+            "${_prefs}" ||  \
+        true
       su \
         -c \
         sed \
