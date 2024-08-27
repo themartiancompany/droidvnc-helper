@@ -48,12 +48,33 @@ _prefs_check() {
     _key_value_get \
       "password")"
   if [[ "${_password}" == *"'"* ]]; then
-    _msg_warning \
-      "illegal character ' (apostrophe), will generate a new password and enable at boot, close and reopen server"
+    _msg=(
+      "illegal character ' (apostrophe),"
+      "remove it and re-execute the command"
+    )
+    # TODO: launch app
+    _msg_error \
+      "${_msg[*]}" \
+      "1"
     _key_value_set \
       password \
       "$(key-gen)"
     _boot_enable
+  elif [[ "${_password}" == "" ]]; then
+    _msg=(
+      "password empty, setting one, shutting down server"
+    )
+    _msg_info \
+      "${_msg[*]}"
+  _app="net.christianbeier.droidvnc_ng"
+    su \
+      -c \
+      "killall ${_app}"
+    _key_value_set \
+      password \
+      "$(key-gen)"
+    _boot_enable
+    # TODO: launch app
   fi
 }
 
