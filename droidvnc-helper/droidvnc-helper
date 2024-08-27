@@ -313,19 +313,26 @@ _key_value_default() {
          "server_last_${_key}"; do
       _delete_expr="/${_field}/d"
       _add_expr="4i <string name=\"${_field}\">${_password}</string>"
-      su \
-        -c \
+      _cmd=(
         sed \
-          "'${_delete_expr}'" \
-          -i \
-            "${_prefs}" ||  \
-        true
-      su \
-        -c \
-        sed \
-          "'${_add_expr}'" \
-          -i \
+          "'${_delete_expr}'"
+          -i
             "${_prefs}"
+      )
+      su \
+        -c \
+        "${_cmd[*]}" || \
+        true
+      _cmd=(
+        sed \
+          "'${_add_expr}'"
+          -i
+            "${_prefs}"
+      )
+      su \
+        -c \
+        "${_cmd[*]}" || \
+        true
     done
   fi
 }
