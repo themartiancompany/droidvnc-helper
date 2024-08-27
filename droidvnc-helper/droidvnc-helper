@@ -41,45 +41,46 @@ _requirements() {
       "tsu"
 }
 
+_server_shutdown() {
+  su \
+    -c \
+    "killall ${_app}" || \
+    _msg_info \
+      "app closed"
+}
+
 _prefs_check() {
   local \
-    _password
+    _password \
+    _msg=()
   _password="$( \
     _key_value_get \
       "password")"
   if [[ "${_password}" == *"'"* ]]; then
     _msg=(
       "illegal character ' (apostrophe),"
-      "remove it and re-execute the command"
+      "removing and enabling start at boot"
     )
-    activity-launch \
-      "${_app}"
-      "MainActivity"
-    _msg_error \
-      "${_msg[*]}" \
-      "1"
-    _key_value_set \
-      password \
-      "$(key-gen)"
+    _msg_warning \
+      "${_msg[*]}"
+    _server_shutdown
+    _key_value_default \
+      password 
     _boot_enable
   elif [[ "${_password}" == "" ]]; then
     _msg=(
-      "password empty, setting one, shutting down server"
+      "password empty, setting new one,"
+      "shutting down server"
     )
-    _msg_info \
+    _msg_warning \
       "${_msg[*]}"
-    su \
-      -c \
-      "killall ${_app}" || \
-      _msg_info \
-        "app closed"
-    _key_value_set \
-      password \
-      "$(key-gen)"
+    _server_shutdown
+    _key_value_default \
+      password
     _boot_enable
-    activity-launch \
-      "${_app}" \
-      "MainActivity"
+    # activity-launch \
+    #   "${_app}" \
+    #   "MainActivity"
   else
     _msg_info \
       "OK"
@@ -114,6 +115,14 @@ _droidvnc_helper() {
         _get \
           "target" \
           "value")"
+    )
+  elif [[ "${_command}" == "default" ]]; then
+    _obj="key_value"
+    _args+=(
+      "$( \
+        _get \
+          "target" \
+          "key")"
     )
   elif [[ "${_command}" == "dump" ]]; then
     _obj="prefs"
@@ -279,6 +288,41 @@ _value_get() {
 
 # Get DroidVNC settings key
 # $1: target settings key
+_key_value_default() {
+  local \
+    _key="${1}" \
+    _prefs \
+    _field \
+    _delete_expr \
+    _add_expr \
+    _password
+  _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
+  if [[ "${_key}" == "password" ]]; then
+    _password="$( \
+      key-gen)"
+    for _field \
+      in "settings_${_key}" \
+         "server_last_${_key}"; do
+      _delete_expr="/${_field}/d"
+      _add_expr="4i <string name=\"${_field}\">${_password}</string>"
+      su \
+        -c \
+        sed \
+          "'${_delete_expr}'" \
+          -i \
+            "${_prefs}"
+      su \
+        -c \
+        sed \
+          "'${_add_expr}'" \
+          -i \
+            "${_prefs}"
+    done
+  fi
+}
+
+# Get DroidVNC settings key
+# $1: target settings key
 _key_value_get() {
   local \
     _key="${1}" \
@@ -287,6 +331,9 @@ _key_value_get() {
     _prefs \
     _line
   _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
+  if [[ "${_key}" == "password" ]]; then
+    _key="settings_${_key}"
+  fi
   _line="$( \
     su \
       -c \
@@ -335,6 +382,7 @@ usage:
   commands:
      get                  Get configuration value
      set                  Set configuration value
+     default              Set default value.
      dump                 Display configuration file
      check                Check and fix issues in the configuration.
      enable               Enable server auto start at boot.
