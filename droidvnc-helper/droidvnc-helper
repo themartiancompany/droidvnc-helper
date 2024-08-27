@@ -46,7 +46,8 @@ _droidvnc_helper() {
     _command="${1}" \
     _args=() \
     _app \
-    _prefs
+    _prefs \
+    _obj
   _app="net.christianbeier.droidvnc_ng"
   _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
   if [[ "${_command}" == "get" ]]; then
@@ -58,6 +59,7 @@ _droidvnc_helper() {
           "key")"
       )
   elif [[ "${_command}" == "set" ]]; then
+    _obj="key_value"
     _args+=(
       "$( \
         _get \
@@ -70,6 +72,10 @@ _droidvnc_helper() {
     )
   elif [[ "${_command}" == "dump" ]]; then
     _obj="prefs"
+  elif \
+    [[ "${_command}" == "enable" ]] || \
+    [[ "${_command}" == "disable" ]]; then
+    _obj="boot"
   fi
   "_${_obj}_${_command}" \
     "${_args[@]}"
@@ -79,7 +85,7 @@ _prefs_dump() {
   local \
     _cmd=()
   _msg_info \
-    "full configuration file: ${_line}"
+    "dumping whole configuration file '${_prefs}'"
   _cmd=(
     cat
       "${_prefs}")
@@ -88,33 +94,76 @@ _prefs_dump() {
     "${_cmd[*]}"
 }
 
+_boot_switch() {
+  local \
+    _value="${1}" \
+    _type \
+    _key
+  _type="attribute"
+  _key="start_on_boot"
+  if [[ "${_value}" == "on" ]]; then
+    _value="true"
+  elif [[ "${_value}" == "off" ]]; then
+    _value="false"
+  fi
+  "_${_type}_set" \
+    "settings_${_key}" \
+    "${_value}"
+}
+
+_boot_enable() {
+  _boot_switch \
+    "on"
+}
+
+_boot_disable() {
+  _boot_switch \
+    "off"
+}
+
 _key_value_set() {
   local \
     _key="${1}" \
     _value="${2}" \
-    _line \
+    _type \
     _cmd=()
-  _line="$( \
-    su \
-      -c \
-      "cat ${_prefs}")"
+  if [[ "${_key}" == "password" ]]; then
+    _type="value"
+    "_${_type}_set" \
+       "server_last_${_key}" \
+       "${_value}"
+    "_${_type}_set" \
+       "settings_${_key}" \
+       "${_value}"
+  elif [[ "${_key}" == "port" ]]; then
+    _type="attribute"
+    "_${_type}_set" \
+       "server_last_${_key}" \
+       "${_value}"
+    "_${_type}_set" \
+       "settings_${_key}" \
+       "${_value}"
+  fi
+}
+
+_value_set() {
+  local \
+    _key="${1}" \
+    _value="${2}" \
+    _cmd=() \
+    _pattern \
+    _expr
   _msg_info \
     "Setting value ${_value} for key ${_key}"
   _pattern="$( \
     _key_value_get \
       "${_key}")"
-  _expr="s/${_pattern}/${_value}/g"
+  _expr="s/${_key}\""'>'"${_pattern}/${_key}\""'>'"${_value}/g"
   _msg_info \
     "sedding ${_pattern} with expression ${_expr}"
-  _new_prefs="$( \
-    printf \
-      "%s" \
-      "${_line}" | \
-      sed \
-        "${_expr}")"
   _cmd=(
     sed
-      "${_expr}"
+      "'${_expr}'"
       -i
       "${_prefs}"
   )
@@ -123,7 +172,34 @@ _key_value_set() {
     "${_cmd[*]}"
 }
 
-_get_attribute() {
+_attribute_set() {
+  local \
+    _key="${1}" \
+    _value="${2}" \
+    _cmd=() \
+    _pattern \
+    _expr
+  _msg_info \
+    "Setting value ${_value} for attribute ${_key}"
+  _pattern="$( \
+    _key_value_get \
+      "${_key}")"
+  _expr="s/name=\"${_key}\" value=\"${_pattern}\"/name=\"${_key}\" value=\"${_value}\"/g"
+  _msg_info \
+    "sedding ${_pattern} with expression ${_expr}"
+  _cmd=(
+    sed
+      "'${_expr}'"
+      -i
+      "${_prefs}"
+  )
+  su \
+    -c \
+    "${_cmd[*]}"
+}
+
+
+_attribute_get() {
   echo \
     "${_line}" | \
     grep \
@@ -139,7 +215,7 @@ _get_attribute() {
             '{print $2}'
 }
 
-_get_value() {
+_value_get() {
   echo \
     "${_line}" | \
     grep \
@@ -169,9 +245,10 @@ _key_value_get() {
       -c \
       "cat ${_prefs}")"
   _value="$( \
-    _get_attribute)"
+    _attribute_get)"
   if [[ "${_value}" == "" ]]; then
-    _value="$(_get_value)"
+    _value="$( \
+      _value_get)"
   fi
   echo \
     "${_value}"
@@ -212,6 +289,8 @@ usage:
      get                  Get configuration value
      set                  Set configuration value
      dump                 Display configuration file
+     enable               Enable server auto start at boot.
+     disable              Disable server auto start at boot.
   options:
      -h                   This message.
      -c                   Enable color output
@@ -292,23 +371,17 @@ if (( $# < 1 )); then
   _set_overrides
   _usage \
     1
-elif (( $# < 2 )); then
-  _msg_error \
-    "no key given" \
-    0
-  _set_overrides
-  _usage \
-    1
 fi
 _set \
   "target" \
   "command" \
   "${1}"
+(( 1 < $# )) && \
 _set \
   "target" \
   "key" \
   "${2}"
-(( $# == 3 )) && \
+(( 2 < $# )) && \
 _set \
   "target" \
   "value" \
