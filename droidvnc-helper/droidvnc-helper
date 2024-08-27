@@ -52,7 +52,9 @@ _prefs_check() {
       "illegal character ' (apostrophe),"
       "remove it and re-execute the command"
     )
-    # TODO: launch app
+    activity-launch \
+      "${_app}"
+      "MainActivity"
     _msg_error \
       "${_msg[*]}" \
       "1"
@@ -66,15 +68,21 @@ _prefs_check() {
     )
     _msg_info \
       "${_msg[*]}"
-  _app="net.christianbeier.droidvnc_ng"
     su \
       -c \
-      "killall ${_app}"
+      "killall ${_app}" || \
+      _msg_info \
+        "app closed"
     _key_value_set \
       password \
       "$(key-gen)"
     _boot_enable
-    # TODO: launch app
+    activity-launch \
+      "${_app}" \
+      "MainActivity"
+  else
+    _msg_info \
+      "OK"
   fi
 }
 
