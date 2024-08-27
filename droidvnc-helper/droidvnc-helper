@@ -41,6 +41,22 @@ _requirements() {
       "tsu"
 }
 
+_prefs_check() {
+  local \
+    _password
+  _password="$( \
+    _key_value_get \
+      "password")"
+  if [[ "${_password}" == *"'"* ]]; then
+    _msg_warning \
+      "illegal character ' (apostrophe), will generate a new password and enable at boot, close and reopen server"
+    _key_value_set \
+      password \
+      "$(key-gen)"
+    _boot_enable
+  fi
+}
+
 _droidvnc_helper() {
   local \
     _command="${1}" \
@@ -71,6 +87,8 @@ _droidvnc_helper() {
           "value")"
     )
   elif [[ "${_command}" == "dump" ]]; then
+    _obj="prefs"
+  elif [[ "${_command}" == "check" ]]; then
     _obj="prefs"
   elif \
     [[ "${_command}" == "enable" ]] || \
@@ -289,6 +307,7 @@ usage:
      get                  Get configuration value
      set                  Set configuration value
      dump                 Display configuration file
+     check                Check and fix issues in the configuration.
      enable               Enable server auto start at boot.
      disable              Disable server auto start at boot.
   options:
