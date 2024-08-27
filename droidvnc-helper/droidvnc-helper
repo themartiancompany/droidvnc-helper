@@ -295,11 +295,19 @@ _key_value_default() {
     _field \
     _delete_expr \
     _add_expr \
-    _password
+    _password \
+    _tmp
   _prefs="/data/data/${_app}/shared_prefs/${_app}_preferences.xml"
   if [[ "${_key}" == "password" ]]; then
+    _tmp="$( \
+      mktemp)"
+    key-gen \
+      "${_tmp}" 
     _password="$( \
-      key-gen)"
+      cat \
+        "${_tmp}")"
+    rm \
+      "${_tmp}"
     for _field \
       in "settings_${_key}" \
          "server_last_${_key}"; do
