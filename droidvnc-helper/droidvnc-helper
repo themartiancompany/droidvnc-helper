@@ -87,6 +87,12 @@ _prefs_check() {
   fi
 }
 
+_app_run() {
+  activity-launch \
+    "${_app}" \
+    "MainActivity"
+}
+
 _droidvnc_helper() {
   local \
     _command="${1}" \
@@ -126,6 +132,8 @@ _droidvnc_helper() {
     )
   elif [[ "${_command}" == "dump" ]]; then
     _obj="prefs"
+  elif [[ "${_command}" == "run" ]]; then
+    _obj="app"
   elif [[ "${_command}" == "check" ]]; then
     _obj="prefs"
   elif \
